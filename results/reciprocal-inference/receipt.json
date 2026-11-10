@@ -1,0 +1,418 @@
+{
+  "experiment": "Two live MoE streams with reciprocal expert-response exchange",
+  "outcome": "PASS",
+  "settings": {
+    "output": "results/reciprocal-inference",
+    "tokens": 4,
+    "alpha": 0.01,
+    "threads": 6
+  },
+  "models": {
+    "A": {
+      "model": "allenai/OLMoE-1B-7B-0924",
+      "revision": "6d84c48581ece794365f2b8e9cfb043c68ade9c5",
+      "prompt": "The capital of France is",
+      "prompt_ids": [
+        510,
+        5347,
+        273,
+        6181,
+        310
+      ],
+      "hidden_size": 2048,
+      "expert": "model.layers.7.mlp.experts.0"
+    },
+    "B": {
+      "model": "ibm-granite/granite-3.1-1b-a400m-base",
+      "revision": "408b6e90baab8cf24f4aa9f8e19703ffa0a53b29",
+      "prompt": "The largest planet is",
+      "prompt_ids": [
+        1318,
+        22909,
+        34127,
+        438
+      ],
+      "hidden_size": 1024,
+      "expert": "model.layers.7.block_sparse_moe.experts.0"
+    }
+  },
+  "execution": "Both full backbones resident and independently generating in two local threads, with one shared prefill barrier. Separate tokenizers, prompts, caches, generation histories. No network or subprocess transport.",
+  "exchange": "At layer 7 output, each stream sends E_own(x_own) from its actual normalized layer-7 MoE input at its last prompt position. Recipient pads/truncates that expert response and adds alpha times the response to its own layer-7 residual at its own last prompt position. Both prefixes and messages exist before either coupled suffix resumes.",
+  "interventions": "Suppress A's outbound expert response or B's outbound expert response, retaining the opposite direction in the same paired run. No response recomputation from recorded offline activations.",
+  "training": "None; no saved learned adapters used",
+  "runtime": {
+    "device": "cpu",
+    "dtype": "float32",
+    "torch": "2.15.0+cu132",
+    "transformers": "5.22.2",
+    "python": "3.13.7",
+    "seed": 0,
+    "attention_implementation": "eager",
+    "experts_implementation": "eager"
+  },
+  "runs": {
+    "baseline": {
+      "active": false,
+      "suppressed_outbound_stream": null,
+      "streams": {
+        "B": {
+          "completion": " Jupiter, which",
+          "generated_tokens": [
+            971,
+            13706,
+            30,
+            1510
+          ],
+          "finite": true,
+          "extra_expert_calls": 0,
+          "exchange_points": 1,
+          "seconds": 1.32
+        },
+        "A": {
+          "completion": " Paris.\n\n",
+          "generated_tokens": [
+            7785,
+            15,
+            187,
+            187
+          ],
+          "finite": true,
+          "extra_expert_calls": 0,
+          "exchange_points": 1,
+          "seconds": 1.65
+        }
+      },
+      "trace": [
+        {
+          "stream": "B",
+          "event": "prefix_ready"
+        },
+        {
+          "stream": "A",
+          "event": "prefix_ready"
+        },
+        {
+          "stream": "A",
+          "event": "resume"
+        },
+        {
+          "stream": "B",
+          "event": "resume"
+        },
+        {
+          "stream": "B",
+          "event": "generation_complete"
+        },
+        {
+          "stream": "A",
+          "event": "generation_complete"
+        }
+      ]
+    },
+    "coupled": {
+      "active": true,
+      "suppressed_outbound_stream": null,
+      "streams": {
+        "B": {
+          "completion": " Jupiter, which",
+          "generated_tokens": [
+            971,
+            13706,
+            30,
+            1510
+          ],
+          "finite": true,
+          "extra_expert_calls": 1,
+          "exchange_points": 1,
+          "seconds": 1.09
+        },
+        "A": {
+          "completion": " Paris.\n\n",
+          "generated_tokens": [
+            7785,
+            15,
+            187,
+            187
+          ],
+          "finite": true,
+          "extra_expert_calls": 1,
+          "exchange_points": 1,
+          "seconds": 1.47
+        }
+      },
+      "trace": [
+        {
+          "stream": "B",
+          "event": "prefix_ready"
+        },
+        {
+          "stream": "B",
+          "event": "message_ready"
+        },
+        {
+          "stream": "A",
+          "event": "prefix_ready"
+        },
+        {
+          "stream": "A",
+          "event": "message_ready"
+        },
+        {
+          "stream": "A",
+          "event": "resume"
+        },
+        {
+          "stream": "B",
+          "event": "resume"
+        },
+        {
+          "stream": "B",
+          "event": "generation_complete"
+        },
+        {
+          "stream": "A",
+          "event": "generation_complete"
+        }
+      ]
+    },
+    "suppress_A_to_B": {
+      "active": true,
+      "suppressed_outbound_stream": "A",
+      "streams": {
+        "B": {
+          "completion": " Jupiter, which",
+          "generated_tokens": [
+            971,
+            13706,
+            30,
+            1510
+          ],
+          "finite": true,
+          "extra_expert_calls": 1,
+          "exchange_points": 1,
+          "seconds": 1.05
+        },
+        "A": {
+          "completion": " Paris.\n\n",
+          "generated_tokens": [
+            7785,
+            15,
+            187,
+            187
+          ],
+          "finite": true,
+          "extra_expert_calls": 1,
+          "exchange_points": 1,
+          "seconds": 1.38
+        }
+      },
+      "trace": [
+        {
+          "stream": "B",
+          "event": "prefix_ready"
+        },
+        {
+          "stream": "B",
+          "event": "message_ready"
+        },
+        {
+          "stream": "A",
+          "event": "prefix_ready"
+        },
+        {
+          "stream": "A",
+          "event": "message_ready"
+        },
+        {
+          "stream": "A",
+          "event": "resume"
+        },
+        {
+          "stream": "B",
+          "event": "resume"
+        },
+        {
+          "stream": "B",
+          "event": "generation_complete"
+        },
+        {
+          "stream": "A",
+          "event": "generation_complete"
+        }
+      ]
+    },
+    "suppress_B_to_A": {
+      "active": true,
+      "suppressed_outbound_stream": "B",
+      "streams": {
+        "B": {
+          "completion": " Jupiter, which",
+          "generated_tokens": [
+            971,
+            13706,
+            30,
+            1510
+          ],
+          "finite": true,
+          "extra_expert_calls": 1,
+          "exchange_points": 1,
+          "seconds": 1.07
+        },
+        "A": {
+          "completion": " Paris.\n\n",
+          "generated_tokens": [
+            7785,
+            15,
+            187,
+            187
+          ],
+          "finite": true,
+          "extra_expert_calls": 1,
+          "exchange_points": 1,
+          "seconds": 1.41
+        }
+      },
+      "trace": [
+        {
+          "stream": "B",
+          "event": "prefix_ready"
+        },
+        {
+          "stream": "B",
+          "event": "message_ready"
+        },
+        {
+          "stream": "A",
+          "event": "prefix_ready"
+        },
+        {
+          "stream": "A",
+          "event": "message_ready"
+        },
+        {
+          "stream": "A",
+          "event": "resume"
+        },
+        {
+          "stream": "B",
+          "event": "resume"
+        },
+        {
+          "stream": "B",
+          "event": "generation_complete"
+        },
+        {
+          "stream": "A",
+          "event": "generation_complete"
+        }
+      ]
+    },
+    "restored": {
+      "active": false,
+      "suppressed_outbound_stream": null,
+      "streams": {
+        "B": {
+          "completion": " Jupiter, which",
+          "generated_tokens": [
+            971,
+            13706,
+            30,
+            1510
+          ],
+          "finite": true,
+          "extra_expert_calls": 0,
+          "exchange_points": 1,
+          "seconds": 1.09
+        },
+        "A": {
+          "completion": " Paris.\n\n",
+          "generated_tokens": [
+            7785,
+            15,
+            187,
+            187
+          ],
+          "finite": true,
+          "extra_expert_calls": 0,
+          "exchange_points": 1,
+          "seconds": 1.47
+        }
+      },
+      "trace": [
+        {
+          "stream": "B",
+          "event": "prefix_ready"
+        },
+        {
+          "stream": "A",
+          "event": "prefix_ready"
+        },
+        {
+          "stream": "A",
+          "event": "resume"
+        },
+        {
+          "stream": "B",
+          "event": "resume"
+        },
+        {
+          "stream": "B",
+          "event": "generation_complete"
+        },
+        {
+          "stream": "A",
+          "event": "generation_complete"
+        }
+      ]
+    }
+  },
+  "comparisons": {
+    "A": {
+      "coupled_downstream_delta_l2": 0.03300568461418152,
+      "coupled_logits_delta_l2": 3.517662763595581,
+      "incoming_intervention_downstream_delta_l2": 0.03300568461418152,
+      "incoming_intervention_logits_delta_l2": 3.517662763595581,
+      "incoming_suppressed_contribution_l2": 0.0,
+      "outgoing_intervention_own_logits_max_abs": 0.0,
+      "outgoing_intervention_own_downstream_max_abs": 0.0,
+      "native_prefix_input_max_abs": 0.0,
+      "restored_downstream_max_abs": 0.0,
+      "restored_logits_max_abs": 0.0,
+      "restored_tokens_equal": true,
+      "sent_shape": [
+        1,
+        2048
+      ],
+      "received_shape": [
+        1,
+        1024
+      ],
+      "sent_l2": 1.5286959409713745,
+      "contribution_l2": 3.242790937423706
+    },
+    "B": {
+      "coupled_downstream_delta_l2": 0.010752476751804352,
+      "coupled_logits_delta_l2": 0.49266958236694336,
+      "incoming_intervention_downstream_delta_l2": 0.010752476751804352,
+      "incoming_intervention_logits_delta_l2": 0.49266958236694336,
+      "incoming_suppressed_contribution_l2": 0.0,
+      "outgoing_intervention_own_logits_max_abs": 0.0,
+      "outgoing_intervention_own_downstream_max_abs": 0.0,
+      "native_prefix_input_max_abs": 0.0,
+      "restored_downstream_max_abs": 0.0,
+      "restored_logits_max_abs": 0.0,
+      "restored_tokens_equal": true,
+      "sent_shape": [
+        1,
+        1024
+      ],
+      "received_shape": [
+        1,
+        2048
+      ],
+      "sent_l2": 3.242790937423706,
+      "contribution_l2": 1.0919618606567383
+    }
+  },
+  "limitations": "OLMoE/Granite pair, not a live OLMoE/DeepSeek pair. One synchronous exchange per direction; no repeated feedback loop, semantic alignment, usefulness, or performance claim. Both expert operators use SwiGLU."
+}

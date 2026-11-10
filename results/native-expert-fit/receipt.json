@@ -1,0 +1,257 @@
+{
+  "experiment": "Frozen DeepSeek expert imitation of one frozen OLMoE expert",
+  "outcome": "COMPLETED",
+  "settings": {
+    "output": "results/native-expert-fit",
+    "steps": 300,
+    "train_tokens": 8192,
+    "heldout_tokens": 4096,
+    "threads": 12
+  },
+  "primary": {
+    "model": "allenai/OLMoE-1B-7B-0924",
+    "revision": "6d84c48581ece794365f2b8e9cfb043c68ade9c5",
+    "expert": "model.layers.7.mlp.experts.0"
+  },
+  "donor": {
+    "model": "deepseek-ai/DeepSeek-V2-Lite",
+    "revision": "604d5664dddd88a0433dbae533b7fe9472482de0",
+    "expert": "model.layers.1.mlp.experts.0"
+  },
+  "data": {
+    "corpus_url": "https://raw.githubusercontent.com/karpathy/char-rnn/6f9487a6fe5b420b7ca9afb0d7c078e37c1d1b4e/data/tinyshakespeare/input.txt",
+    "corpus_token_count": 340240,
+    "train_token_range": [
+      0,
+      8192
+    ],
+    "heldout_token_range": [
+      336144,
+      340240
+    ],
+    "context_tokens": 256,
+    "context_reset_each_chunk": true,
+    "native_expert": "model.layers.7.mlp.experts.0",
+    "selection": "Only tokens actually routed to expert 0; raw expert outputs, before router weighting",
+    "train_pairs": 399,
+    "heldout_pairs": 262
+  },
+  "results": {
+    "pretrained": {
+      "trainable_parameters": 135168,
+      "history": [
+        {
+          "step": 0,
+          "train": {
+            "mse": 0.001194619107991457,
+            "relative_mse": 1.0,
+            "mean_cosine": 0.0
+          },
+          "heldout": {
+            "mse": 0.0012295369524508715,
+            "relative_mse": 1.0,
+            "mean_cosine": 0.0
+          }
+        },
+        {
+          "step": 100,
+          "train": {
+            "mse": 0.0008727964595891535,
+            "relative_mse": 0.7306064963340759,
+            "mean_cosine": 0.4824468195438385
+          },
+          "heldout": {
+            "mse": 0.001106827869080007,
+            "relative_mse": 0.9001989364624023,
+            "mean_cosine": 0.29900088906288147
+          }
+        },
+        {
+          "step": 300,
+          "train": {
+            "mse": 0.0008119739941321313,
+            "relative_mse": 0.679692804813385,
+            "mean_cosine": 0.5379263758659363
+          },
+          "heldout": {
+            "mse": 0.001119554741308093,
+            "relative_mse": 0.9105498790740967,
+            "mean_cosine": 0.29169800877571106
+          }
+        }
+      ],
+      "expert_rms": 0.22795546054840088,
+      "frozen_expert_parameters": 8650752,
+      "expert_has_gradients": false
+    },
+    "bypass": {
+      "trainable_parameters": 135168,
+      "history": [
+        {
+          "step": 0,
+          "train": {
+            "mse": 0.001194619107991457,
+            "relative_mse": 1.0,
+            "mean_cosine": 0.0
+          },
+          "heldout": {
+            "mse": 0.0012295369524508715,
+            "relative_mse": 1.0,
+            "mean_cosine": 0.0
+          }
+        },
+        {
+          "step": 100,
+          "train": {
+            "mse": 0.0008676926954649389,
+            "relative_mse": 0.7263341546058655,
+            "mean_cosine": 0.4997868239879608
+          },
+          "heldout": {
+            "mse": 0.0010726848850026727,
+            "relative_mse": 0.8724299669265747,
+            "mean_cosine": 0.3379072844982147
+          }
+        },
+        {
+          "step": 300,
+          "train": {
+            "mse": 0.0007086615660227835,
+            "relative_mse": 0.59321129322052,
+            "mean_cosine": 0.61554354429245
+          },
+          "heldout": {
+            "mse": 0.001067690784111619,
+            "relative_mse": 0.8683682084083557,
+            "mean_cosine": 0.3451952636241913
+          }
+        }
+      ],
+      "expert_rms": null,
+      "frozen_expert_parameters": 0,
+      "expert_has_gradients": false
+    },
+    "random": {
+      "trainable_parameters": 135168,
+      "history": [
+        {
+          "step": 0,
+          "train": {
+            "mse": 0.001194619107991457,
+            "relative_mse": 1.0,
+            "mean_cosine": 0.0
+          },
+          "heldout": {
+            "mse": 0.0012295369524508715,
+            "relative_mse": 1.0,
+            "mean_cosine": 0.0
+          }
+        },
+        {
+          "step": 100,
+          "train": {
+            "mse": 0.0008734682924114168,
+            "relative_mse": 0.7311688661575317,
+            "mean_cosine": 0.4849490821361542
+          },
+          "heldout": {
+            "mse": 0.0011017000069841743,
+            "relative_mse": 0.8960283994674683,
+            "mean_cosine": 0.30605676770210266
+          }
+        },
+        {
+          "step": 300,
+          "train": {
+            "mse": 0.0008081702399067581,
+            "relative_mse": 0.6765087246894836,
+            "mean_cosine": 0.542018473148346
+          },
+          "heldout": {
+            "mse": 0.0011128959013149142,
+            "relative_mse": 0.9051341414451599,
+            "mean_cosine": 0.2893688976764679
+          }
+        }
+      ],
+      "expert_rms": 0.0903267189860344,
+      "frozen_expert_parameters": 8650752,
+      "expert_has_gradients": false
+    },
+    "scrambled": {
+      "trainable_parameters": 135168,
+      "history": [
+        {
+          "step": 0,
+          "train": {
+            "mse": 0.001194619107991457,
+            "relative_mse": 1.0,
+            "mean_cosine": 0.0
+          },
+          "heldout": {
+            "mse": 0.0012295369524508715,
+            "relative_mse": 1.0,
+            "mean_cosine": 0.0
+          }
+        },
+        {
+          "step": 100,
+          "train": {
+            "mse": 0.0008657322614453733,
+            "relative_mse": 0.7246931195259094,
+            "mean_cosine": 0.49073779582977295
+          },
+          "heldout": {
+            "mse": 0.0011018280638381839,
+            "relative_mse": 0.8961325287818909,
+            "mean_cosine": 0.3046169877052307
+          }
+        },
+        {
+          "step": 300,
+          "train": {
+            "mse": 0.0008085440495051444,
+            "relative_mse": 0.6768216490745544,
+            "mean_cosine": 0.5412558317184448
+          },
+          "heldout": {
+            "mse": 0.001121402601711452,
+            "relative_mse": 0.9120528101921082,
+            "mean_cosine": 0.2826531231403351
+          }
+        }
+      ],
+      "expert_rms": 0.20657067000865936,
+      "frozen_expert_parameters": 8650752,
+      "expert_has_gradients": false
+    }
+  },
+  "train_mean_heldout_baseline": {
+    "mse": 0.0011822490487247705,
+    "mean_cosine": 0.20259256660938263
+  },
+  "heldout_zero_mse": 0.0012295369524508715,
+  "target_train_rms": 0.03456326201558113,
+  "maps": "A/B: learned diagonal plus rank-16 linear update, no bias; A initialized identity, B zero. Bypass: 2048 -> 33 -> SiLU -> 2048, no bias, zero output initialization.",
+  "scaling": "Raw x. Loss in train-target-RMS units; each frozen expert output divided by its fixed RMS on training x at identity A. Prediction in native units = target_rms * B(E(A(x))/expert_rms). Scalars are frozen and use train data only.",
+  "optimizer": {
+    "name": "Adam",
+    "learning_rate": 0.001,
+    "batch_size": 64,
+    "steps": 300,
+    "initialization_seed": 3,
+    "batch_seed": 4,
+    "random_expert_seed": 1,
+    "scramble_seed": 2
+  },
+  "checkpoint_selection": "Final fixed-budget step; heldout metrics never used for selection or training",
+  "runtime": {
+    "device": "cuda",
+    "dtype": "float32",
+    "torch": "2.15.0+cu132",
+    "transformers": "5.22.2",
+    "python": "3.13.7"
+  },
+  "seconds": 149.88,
+  "limitations": "One native expert, one donor, one corpus split, one training seed and adapter budget; no sample-efficiency or pretraining-transfer claim; no in-model replacement run."
+}

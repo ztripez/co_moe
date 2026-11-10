@@ -1,0 +1,18 @@
+{
+  "corpus_url": "https://raw.githubusercontent.com/karpathy/char-rnn/6f9487a6fe5b420b7ca9afb0d7c078e37c1d1b4e/data/tinyshakespeare/input.txt",
+  "corpus_token_count": 340240,
+  "train_token_range": [
+    0,
+    8192
+  ],
+  "heldout_token_range": [
+    336144,
+    340240
+  ],
+  "context_tokens": 256,
+  "context_reset_each_chunk": true,
+  "native_expert": "model.layers.7.mlp.experts.0",
+  "selection": "Only tokens actually routed to expert 0; raw expert outputs, before router weighting",
+  "train_pairs": 399,
+  "heldout_pairs": 262
+}

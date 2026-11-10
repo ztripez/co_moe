@@ -1,0 +1,210 @@
+{
+  "experiment": "Co-MoE-0 donor weight controls",
+  "outcome": "OBSERVED",
+  "options": {
+    "weight_controls": true,
+    "alpha": 0.01,
+    "tokens": 4,
+    "threads": 12,
+    "prompt": "The capital of France is",
+    "output": "results/weight-controls"
+  },
+  "primary": {
+    "model": "allenai/OLMoE-1B-7B-0924",
+    "revision": "6d84c48581ece794365f2b8e9cfb043c68ade9c5"
+  },
+  "donor": {
+    "model": "deepseek-ai/DeepSeek-V2-Lite",
+    "revision": "604d5664dddd88a0433dbae533b7fe9472482de0",
+    "expert": "model.layers.1.mlp.experts.0"
+  },
+  "random_control": {
+    "seed": 1,
+    "distribution": "independent normal(0, initializer_range)",
+    "std": 0.02
+  },
+  "scrambled_control": {
+    "seed": 2,
+    "method": "independent permutation of all scalar entries within each original matrix"
+  },
+  "norm_matching": "Per token, after projection, before alpha: match pretrained output norm on the same receiving activation",
+  "measurement": "Last prompt token, before generated histories can differ; layers 7 and 8, as in Co-MoE-0",
+  "baseline_downstream_l2": 1.0940799713134766,
+  "baseline_logits_l2": 1081.7608642578125,
+  "runtime": {
+    "torch": "2.15.0+cu132",
+    "transformers": "5.22.2",
+    "python": "3.13.7",
+    "device": "cpu",
+    "dtype": "float32",
+    "seed": 0
+  },
+  "runs": {
+    "baseline": {
+      "alpha": 0,
+      "donor_input_sign": 1,
+      "tokens": [
+        7785,
+        15,
+        187,
+        187
+      ],
+      "completion": " Paris.\n\n",
+      "finite": true,
+      "expert_calls": 0,
+      "seconds": 1.33,
+      "shapes": null,
+      "norm_match_max_relative_error": 0.0
+    },
+    "pretrained": {
+      "alpha": 0.01,
+      "donor_input_sign": 1,
+      "tokens": [
+        7785,
+        15,
+        187,
+        187
+      ],
+      "completion": " Paris.\n\n",
+      "finite": true,
+      "expert_calls": 4,
+      "seconds": 1.09,
+      "shapes": [
+        [
+          1,
+          5,
+          2048
+        ],
+        [
+          1,
+          5,
+          2048
+        ],
+        [
+          1,
+          5,
+          2048
+        ],
+        [
+          1,
+          5,
+          2048
+        ]
+      ],
+      "norm_match_max_relative_error": 0.0
+    },
+    "random": {
+      "alpha": 0.01,
+      "donor_input_sign": 1,
+      "tokens": [
+        7785,
+        15,
+        187,
+        187
+      ],
+      "completion": " Paris.\n\n",
+      "finite": true,
+      "expert_calls": 4,
+      "seconds": 1.08,
+      "shapes": [
+        [
+          1,
+          5,
+          2048
+        ],
+        [
+          1,
+          5,
+          2048
+        ],
+        [
+          1,
+          5,
+          2048
+        ],
+        [
+          1,
+          5,
+          2048
+        ]
+      ],
+      "norm_match_max_relative_error": 1.895340773216958e-07
+    },
+    "scrambled": {
+      "alpha": 0.01,
+      "donor_input_sign": 1,
+      "tokens": [
+        7785,
+        15,
+        187,
+        187
+      ],
+      "completion": " Paris.\n\n",
+      "finite": true,
+      "expert_calls": 4,
+      "seconds": 1.08,
+      "shapes": [
+        [
+          1,
+          5,
+          2048
+        ],
+        [
+          1,
+          5,
+          2048
+        ],
+        [
+          1,
+          5,
+          2048
+        ],
+        [
+          1,
+          5,
+          2048
+        ]
+      ],
+      "norm_match_max_relative_error": 1.895340773216958e-07
+    }
+  },
+  "comparisons": {
+    "pretrained": {
+      "contribution_l2": 0.0114964060485363,
+      "injected_delta_l2": 0.00011496384104248136,
+      "downstream_delta_l2": 0.009862467646598816,
+      "downstream_relative_delta_l2": 0.009014393741947969,
+      "logits_delta_l2": 8.51207447052002,
+      "logits_relative_delta_l2": 0.007868721037860883,
+      "contribution_cosine_to_pretrained": 0.9999997615814209,
+      "logit_delta_cosine_to_pretrained": 1.000000238418579,
+      "logits_l2_vs_pretrained": 0.0,
+      "captured_input_max_abs_vs_baseline": 0.0
+    },
+    "random": {
+      "contribution_l2": 0.0114964060485363,
+      "injected_delta_l2": 0.00011496413208078593,
+      "downstream_delta_l2": 0.009708921425044537,
+      "downstream_relative_delta_l2": 0.008874050964838226,
+      "logits_delta_l2": 8.844927787780762,
+      "logits_relative_delta_l2": 0.008176416877355973,
+      "contribution_cosine_to_pretrained": -0.0022168587893247604,
+      "logit_delta_cosine_to_pretrained": 0.054142601788043976,
+      "logits_l2_vs_pretrained": 11.938824653625488,
+      "captured_input_max_abs_vs_baseline": 0.0
+    },
+    "scrambled": {
+      "contribution_l2": 0.0114964060485363,
+      "injected_delta_l2": 0.00011496487422846258,
+      "downstream_delta_l2": 0.010485767386853695,
+      "downstream_relative_delta_l2": 0.009584095917837899,
+      "logits_delta_l2": 12.330960273742676,
+      "logits_relative_delta_l2": 0.011398970586907716,
+      "contribution_cosine_to_pretrained": -0.006123361177742481,
+      "logit_delta_cosine_to_pretrained": -0.2863462567329407,
+      "logits_l2_vs_pretrained": 16.870647430419922,
+      "captured_input_max_abs_vs_baseline": 0.0
+    }
+  },
+  "limitation": "One prompt and one random/scramble seed; distinguishability is not evidence of usefulness or a pretraining advantage."
+}

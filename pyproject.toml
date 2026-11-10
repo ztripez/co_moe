@@ -1,0 +1,12 @@
+[project]
+name = "co-moe"
+version = "0.1.0"
+description = "One local heterogeneous MoE activation-coupling experiment"
+requires-python = ">=3.12"
+dependencies = ["torch", "transformers", "safetensors", "huggingface-hub", "httpx", "pydantic"]
+
+[dependency-groups]
+dev = ["ruff"]
+
+[tool.ruff]
+line-length = 100

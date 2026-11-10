@@ -1,0 +1,184 @@
+{
+  "outcome": "PASS",
+  "options": {
+    "alpha": 0.01,
+    "tokens": 4,
+    "threads": 12,
+    "prompt": "The capital of France is",
+    "output": "results/co-moe-0"
+  },
+  "primary": {
+    "model": "allenai/OLMoE-1B-7B-0924",
+    "revision": "6d84c48581ece794365f2b8e9cfb043c68ade9c5"
+  },
+  "donor": {
+    "model": "deepseek-ai/DeepSeek-V2-Lite",
+    "revision": "604d5664dddd88a0433dbae533b7fe9472482de0",
+    "expert": "model.layers.1.mlp.experts.0",
+    "hidden_size": 2048,
+    "intermediate_size": 1408
+  },
+  "injection": "layer 7 output, after attention and native MoE residual additions; observed layer 8 output, last prompt token",
+  "projections": "2048 -> 2048 cyclic permutation +17; inverse -17 on output; no fitted parameters",
+  "donor_backbone_instantiated_or_executed": false,
+  "runtime": {
+    "torch": "2.11.0+cu130",
+    "transformers": "5.7.0",
+    "python": "3.13.7",
+    "device": "cpu",
+    "dtype": "float32",
+    "seed": 0,
+    "restoration_tolerance": 0
+  },
+  "runs": {
+    "baseline": {
+      "alpha": 0,
+      "donor_input_sign": 1,
+      "tokens": [
+        7785,
+        15,
+        187,
+        187
+      ],
+      "completion": " Paris.\n\n",
+      "finite": true,
+      "expert_calls": 0,
+      "seconds": 1.18,
+      "shapes": null
+    },
+    "coupled": {
+      "alpha": 0.01,
+      "donor_input_sign": 1,
+      "tokens": [
+        7785,
+        15,
+        187,
+        187
+      ],
+      "completion": " Paris.\n\n",
+      "finite": true,
+      "expert_calls": 4,
+      "seconds": 1.16,
+      "shapes": [
+        [
+          1,
+          5,
+          2048
+        ],
+        [
+          1,
+          5,
+          2048
+        ],
+        [
+          1,
+          5,
+          2048
+        ],
+        [
+          1,
+          5,
+          2048
+        ]
+      ]
+    },
+    "coupled_repeat": {
+      "alpha": 0.01,
+      "donor_input_sign": 1,
+      "tokens": [
+        7785,
+        15,
+        187,
+        187
+      ],
+      "completion": " Paris.\n\n",
+      "finite": true,
+      "expert_calls": 4,
+      "seconds": 1.11,
+      "shapes": [
+        [
+          1,
+          5,
+          2048
+        ],
+        [
+          1,
+          5,
+          2048
+        ],
+        [
+          1,
+          5,
+          2048
+        ],
+        [
+          1,
+          5,
+          2048
+        ]
+      ]
+    },
+    "donor_input_negated": {
+      "alpha": 0.01,
+      "donor_input_sign": -1,
+      "tokens": [
+        7785,
+        15,
+        187,
+        187
+      ],
+      "completion": " Paris.\n\n",
+      "finite": true,
+      "expert_calls": 4,
+      "seconds": 1.06,
+      "shapes": [
+        [
+          1,
+          5,
+          2048
+        ],
+        [
+          1,
+          5,
+          2048
+        ],
+        [
+          1,
+          5,
+          2048
+        ],
+        [
+          1,
+          5,
+          2048
+        ]
+      ]
+    },
+    "restored": {
+      "alpha": 0,
+      "donor_input_sign": 1,
+      "tokens": [
+        7785,
+        15,
+        187,
+        187
+      ],
+      "completion": " Paris.\n\n",
+      "finite": true,
+      "expert_calls": 0,
+      "seconds": 1.03,
+      "shapes": null
+    }
+  },
+  "differences": {
+    "coupled_downstream_l2": 0.009862467646598816,
+    "coupled_logits_l2": 8.51207447052002,
+    "intervention_donor_output_l2": 0.000427935243351385,
+    "intervention_contribution_l2": 0.00042793521424755454,
+    "intervention_downstream_l2": 0.011681868694722652,
+    "intervention_logits_l2": 10.559378623962402,
+    "repeat_downstream_max_abs": 0.0,
+    "restored_downstream_max_abs": 0.0,
+    "restored_logits_max_abs": 0.0
+  }
+}

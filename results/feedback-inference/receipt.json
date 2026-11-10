@@ -1,0 +1,398 @@
+{
+  "experiment": "One live A -> B -> A closed-loop exchange",
+  "outcome": "PASS",
+  "settings": {
+    "output": "results/feedback-inference",
+    "tokens": 4,
+    "alpha": 0.01,
+    "threads": 6
+  },
+  "models": {
+    "A": {
+      "model": "allenai/OLMoE-1B-7B-0924",
+      "revision": "6d84c48581ece794365f2b8e9cfb043c68ade9c5",
+      "prompt": "The capital of France is",
+      "prompt_ids": [
+        510,
+        5347,
+        273,
+        6181,
+        310
+      ],
+      "expert": "layer 7 expert 0 (same as reciprocal experiment)"
+    },
+    "B": {
+      "model": "ibm-granite/granite-3.1-1b-a400m-base",
+      "revision": "408b6e90baab8cf24f4aa9f8e19703ffa0a53b29",
+      "prompt": "The largest planet is",
+      "prompt_ids": [
+        1318,
+        22909,
+        34127,
+        438
+      ],
+      "expert": "layer 7 expert 0 (same as reciprocal experiment)"
+    }
+  },
+  "protocol": "Round 1: A layer-7 expert 0 on A layer-7 normalized MoE input -> B layer-7 residual. B runs native layers 8 and 9. Round 2: SAME B layer-7 expert 0 on B's live layer-9 normalized MoE input -> A layer-9 residual. A then runs native layer 10 onward. Both rounds use barriers within the same two live forward streams, before the first token is chosen.",
+  "projections": "Same zero padding (B 1024 -> A 2048) and truncation (A 2048 -> B 1024) as reciprocity; alpha 0.01 by default. No learned adapters or norm matching.",
+  "intervention": "Zero only the delivered first A -> B response; A's expert still computes its original response, B computes a fresh later return in both conditions. A has no other receiving edge before round 2.",
+  "execution": "Both full backbones resident, two local threads, separate prompts/tokenizers/KV caches/generation histories. One ordered round trip during prefill and four native greedy generation steps per stream by default.",
+  "ordering_verified": {
+    "closed_loop": true,
+    "suppress_first_message": true
+  },
+  "comparisons": {
+    "A_first_response_max_abs": 0.0,
+    "A_before_return_max_abs": 0.0,
+    "first_delivered_message_delta_l2": 1.5286959409713745,
+    "suppressed_first_message_l2": 0.0,
+    "B_later_expert_input_delta_l2": 0.4716140925884247,
+    "B_return_response_delta_l2": 0.029614854604005814,
+    "A_received_return_delta_l2": 0.029614854604005814,
+    "A_projected_return_delta_l2": 0.029614854604005814,
+    "A_after_return_delta_l2": 0.00029615024686791003,
+    "A_downstream_layer10_delta_l2": 0.0003196560428477824,
+    "A_logits_delta_l2": 0.027003681287169456,
+    "B_downstream_layer10_delta_l2": 0.008880323730409145,
+    "B_logits_delta_l2": 0.49266958236694336
+  },
+  "restoration": {
+    "A": {
+      "downstream_max_abs": 0.0,
+      "logits_max_abs": 0.0,
+      "tokens_equal": true
+    },
+    "B": {
+      "downstream_max_abs": 0.0,
+      "logits_max_abs": 0.0,
+      "tokens_equal": true
+    }
+  },
+  "runs": {
+    "baseline": {
+      "active": false,
+      "suppress_first_message": false,
+      "streams": {
+        "B": {
+          "completion": " Jupiter, which",
+          "generated_tokens": [
+            971,
+            13706,
+            30,
+            1510
+          ],
+          "finite": true,
+          "rounds": 2,
+          "extra_expert_calls": 0,
+          "seconds": 1.47
+        },
+        "A": {
+          "completion": " Paris.\n\n",
+          "generated_tokens": [
+            7785,
+            15,
+            187,
+            187
+          ],
+          "finite": true,
+          "rounds": 2,
+          "extra_expert_calls": 0,
+          "seconds": 1.91
+        }
+      },
+      "trace": [
+        {
+          "stream": "B",
+          "event": "round1_boundary_ready"
+        },
+        {
+          "stream": "A",
+          "event": "round1_boundary_ready"
+        },
+        {
+          "stream": "A",
+          "event": "round1_resume_without_injection"
+        },
+        {
+          "stream": "B",
+          "event": "round1_resume_without_injection"
+        },
+        {
+          "stream": "B",
+          "event": "round2_boundary_ready"
+        },
+        {
+          "stream": "A",
+          "event": "round2_boundary_ready"
+        },
+        {
+          "stream": "A",
+          "event": "round2_resume_without_injection"
+        },
+        {
+          "stream": "B",
+          "event": "round2_resume_without_injection"
+        },
+        {
+          "stream": "B",
+          "event": "generation_complete"
+        },
+        {
+          "stream": "A",
+          "event": "generation_complete"
+        }
+      ]
+    },
+    "closed_loop": {
+      "active": true,
+      "suppress_first_message": false,
+      "streams": {
+        "B": {
+          "completion": " Jupiter, which",
+          "generated_tokens": [
+            971,
+            13706,
+            30,
+            1510
+          ],
+          "finite": true,
+          "rounds": 2,
+          "extra_expert_calls": 1,
+          "seconds": 1.42
+        },
+        "A": {
+          "completion": " Paris.\n\n",
+          "generated_tokens": [
+            7785,
+            15,
+            187,
+            187
+          ],
+          "finite": true,
+          "rounds": 2,
+          "extra_expert_calls": 1,
+          "seconds": 1.77
+        }
+      },
+      "trace": [
+        {
+          "stream": "B",
+          "event": "round1_boundary_ready"
+        },
+        {
+          "stream": "A",
+          "event": "round1_boundary_ready"
+        },
+        {
+          "stream": "A",
+          "event": "round1_message_ready"
+        },
+        {
+          "stream": "A",
+          "event": "round1_resume_without_injection"
+        },
+        {
+          "stream": "B",
+          "event": "round1_message_injected"
+        },
+        {
+          "stream": "B",
+          "event": "round2_boundary_ready"
+        },
+        {
+          "stream": "B",
+          "event": "round2_message_ready"
+        },
+        {
+          "stream": "A",
+          "event": "round2_boundary_ready"
+        },
+        {
+          "stream": "B",
+          "event": "round2_resume_without_injection"
+        },
+        {
+          "stream": "A",
+          "event": "round2_message_injected"
+        },
+        {
+          "stream": "B",
+          "event": "generation_complete"
+        },
+        {
+          "stream": "A",
+          "event": "generation_complete"
+        }
+      ]
+    },
+    "suppress_first_message": {
+      "active": true,
+      "suppress_first_message": true,
+      "streams": {
+        "B": {
+          "completion": " Jupiter, which",
+          "generated_tokens": [
+            971,
+            13706,
+            30,
+            1510
+          ],
+          "finite": true,
+          "rounds": 2,
+          "extra_expert_calls": 1,
+          "seconds": 1.29
+        },
+        "A": {
+          "completion": " Paris.\n\n",
+          "generated_tokens": [
+            7785,
+            15,
+            187,
+            187
+          ],
+          "finite": true,
+          "rounds": 2,
+          "extra_expert_calls": 1,
+          "seconds": 1.68
+        }
+      },
+      "trace": [
+        {
+          "stream": "B",
+          "event": "round1_boundary_ready"
+        },
+        {
+          "stream": "A",
+          "event": "round1_boundary_ready"
+        },
+        {
+          "stream": "A",
+          "event": "round1_message_ready"
+        },
+        {
+          "stream": "A",
+          "event": "round1_resume_without_injection"
+        },
+        {
+          "stream": "B",
+          "event": "round1_message_injected"
+        },
+        {
+          "stream": "B",
+          "event": "round2_boundary_ready"
+        },
+        {
+          "stream": "B",
+          "event": "round2_message_ready"
+        },
+        {
+          "stream": "A",
+          "event": "round2_boundary_ready"
+        },
+        {
+          "stream": "B",
+          "event": "round2_resume_without_injection"
+        },
+        {
+          "stream": "A",
+          "event": "round2_message_injected"
+        },
+        {
+          "stream": "B",
+          "event": "generation_complete"
+        },
+        {
+          "stream": "A",
+          "event": "generation_complete"
+        }
+      ]
+    },
+    "restored": {
+      "active": false,
+      "suppress_first_message": false,
+      "streams": {
+        "B": {
+          "completion": " Jupiter, which",
+          "generated_tokens": [
+            971,
+            13706,
+            30,
+            1510
+          ],
+          "finite": true,
+          "rounds": 2,
+          "extra_expert_calls": 0,
+          "seconds": 1.27
+        },
+        "A": {
+          "completion": " Paris.\n\n",
+          "generated_tokens": [
+            7785,
+            15,
+            187,
+            187
+          ],
+          "finite": true,
+          "rounds": 2,
+          "extra_expert_calls": 0,
+          "seconds": 1.63
+        }
+      },
+      "trace": [
+        {
+          "stream": "B",
+          "event": "round1_boundary_ready"
+        },
+        {
+          "stream": "A",
+          "event": "round1_boundary_ready"
+        },
+        {
+          "stream": "A",
+          "event": "round1_resume_without_injection"
+        },
+        {
+          "stream": "B",
+          "event": "round1_resume_without_injection"
+        },
+        {
+          "stream": "B",
+          "event": "round2_boundary_ready"
+        },
+        {
+          "stream": "A",
+          "event": "round2_boundary_ready"
+        },
+        {
+          "stream": "A",
+          "event": "round2_resume_without_injection"
+        },
+        {
+          "stream": "B",
+          "event": "round2_resume_without_injection"
+        },
+        {
+          "stream": "B",
+          "event": "generation_complete"
+        },
+        {
+          "stream": "A",
+          "event": "generation_complete"
+        }
+      ]
+    }
+  },
+  "runtime": {
+    "device": "cpu",
+    "dtype": "float32",
+    "torch": "2.15.0+cu132",
+    "transformers": "5.22.2",
+    "python": "3.13.7",
+    "seed": 0,
+    "attention": "eager",
+    "experts": "eager"
+  },
+  "training": "None; all pretrained parameters frozen; no saved learned adapters used",
+  "limitations": "One causally ordered round trip, one pair of prompts, OLMoE/Granite only. No sustained-loop, stability, usefulness, semantic, or performance claim. Both expert operators use SwiGLU."
+}
