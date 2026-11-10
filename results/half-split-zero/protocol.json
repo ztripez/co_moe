@@ -1,0 +1,69 @@
+{
+  "experiment": "Matched-zero controls for the three saved layer-7 half-split masks",
+  "fixed_before_scoring_utc": "2026-11-10T17:31:53.033103+00:00",
+  "reference_receipt": "results/half-split-benchmark/receipt.json",
+  "reference_conditions_reused": [
+    "native",
+    "split_seed_0",
+    "split_seed_1",
+    "split_seed_2"
+  ],
+  "primary": {
+    "model": "allenai/OLMoE-1B-7B-0924",
+    "revision": "6d84c48581ece794365f2b8e9cfb043c68ade9c5",
+    "layer": 7
+  },
+  "data": {
+    "corpus": "Tiny Shakespeare",
+    "revision": "6f9487a6fe5b420b7ca9afb0d7c078e37c1d1b4e",
+    "url": "https://raw.githubusercontent.com/karpathy/char-rnn/6f9487a6fe5b420b7ca9afb0d7c078e37c1d1b4e/data/tinyshakespeare/input.txt",
+    "source_token_ids": "results/substitution-benchmark/input_ids.pt",
+    "token_range": [
+      16384,
+      20480
+    ],
+    "selection": "Reuse the preceding benchmark slice; no new text selection",
+    "context_tokens": 256,
+    "contexts": 16,
+    "input_tokens": 4096,
+    "scored_targets": 4080,
+    "scoring": "Teacher forcing: logits[j] score reference[j+1], j=0..254; reset each context"
+  },
+  "saved_masks": "results/half-split-benchmark/masks.pt",
+  "mask_seeds": [
+    0,
+    1,
+    2
+  ],
+  "mask_generation": false,
+  "conditions_executed": [
+    "zero_seed_0",
+    "zero_seed_1",
+    "zero_seed_2"
+  ],
+  "replacement": "Set the same four selected raw outputs to zero before original weighting",
+  "routing": "Original indices and weights; no renormalization of the remaining slots",
+  "donor_loaded_or_executed": false,
+  "runtime": {
+    "python": "3.13.7",
+    "torch": "2.15.0+cu132",
+    "transformers": "5.22.2",
+    "device": "cpu",
+    "dtype": "float32",
+    "loss_accumulation": "float64 sum of float32 cross-entropy values",
+    "seed": 0,
+    "threads": 12,
+    "attention": "eager",
+    "experts": "eager",
+    "use_cache": false
+  },
+  "comparison": "Granite minus zero, paired by saved mask and reference-token position",
+  "training": false,
+  "tuning": false,
+  "limitations": [
+    "Three mask draws on one previously evaluated literary slice",
+    "A benefit over zero would not establish a benefit from pretrained structure",
+    "No random-weight control at this density, no coefficient or mask search",
+    "No new native/Granite run or numerical restoration run"
+  ]
+}

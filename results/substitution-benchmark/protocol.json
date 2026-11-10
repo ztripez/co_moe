@@ -1,0 +1,92 @@
+{
+  "experiment": "Fixed OLMoE/Granite native-expert substitution benchmark",
+  "fixed_before_scoring_utc": "2026-11-10T12:43:21.456638+00:00",
+  "primary": {
+    "model": "allenai/OLMoE-1B-7B-0924",
+    "revision": "6d84c48581ece794365f2b8e9cfb043c68ade9c5",
+    "layer": 7,
+    "expert": 0
+  },
+  "donor": {
+    "model": "ibm-granite/granite-3.1-1b-a400m-base",
+    "revision": "408b6e90baab8cf24f4aa9f8e19703ffa0a53b29",
+    "layer": 7,
+    "expert": 0
+  },
+  "data": {
+    "corpus": "Tiny Shakespeare",
+    "revision": "6f9487a6fe5b420b7ca9afb0d7c078e37c1d1b4e",
+    "url": "https://raw.githubusercontent.com/karpathy/char-rnn/6f9487a6fe5b420b7ca9afb0d7c078e37c1d1b4e/data/tinyshakespeare/input.txt",
+    "local_source": "results/native-expert-fit/corpus.txt",
+    "token_range": [
+      16384,
+      20480
+    ],
+    "selection": "Fixed unused Co-MoE corpus region; no selection by loss or routing",
+    "context_tokens": 256,
+    "context_count": 16,
+    "context_resets": true,
+    "input_tokens": 4096,
+    "scored_targets": 4080,
+    "scoring": "logits at position j predict reference token j+1; j=0..254 per context",
+    "prior_fit_ranges": [
+      [
+        0,
+        8192
+      ],
+      [
+        336144,
+        340240
+      ]
+    ]
+  },
+  "conditions": [
+    "native",
+    "pretrained",
+    "zero",
+    "random",
+    "scrambled"
+  ],
+  "replacement": "Only layer-7 expert-0 raw output, before ORIGINAL mixture weight",
+  "projections": "Truncate 2048 -> 1024; zero-pad 1024 -> 2048",
+  "extra_alpha": null,
+  "controls": {
+    "random": {
+      "distribution": "independent normal(0, 0.02)",
+      "seed": 1
+    },
+    "scrambled": {
+      "method": "Independent scalar permutations per gate/up/down",
+      "seed": 2
+    },
+    "norm_matching": "Random/scrambled projected response per selected row matches the pretrained projected response on that same input, before mixture weighting",
+    "norm_match_relative_tolerance": 1e-05
+  },
+  "metrics": [
+    "Mean next-token NLL (nats)",
+    "exp(mean NLL)",
+    "Paired NLL per context"
+  ],
+  "runtime": {
+    "python": "3.13.7",
+    "torch": "2.15.0+cu132",
+    "transformers": "5.22.2",
+    "device": "cpu",
+    "dtype": "float32",
+    "loss_accumulation": "float64 sum of float32 cross-entropy values",
+    "seed": 0,
+    "threads": 12,
+    "attention": "eager",
+    "experts": "eager",
+    "use_cache": false
+  },
+  "training": false,
+  "tuning": false,
+  "limitations": [
+    "One literary text slice, one fixed expert pair, one draw per weight control",
+    "Unused in prior Co-MoE tests does not imply absence from model pretraining",
+    "Context resets limit available history; not a standard full-corpus perplexity score",
+    "Random/scrambled controls inherit the pretrained response norm, not its direction",
+    "No statistical superiority, general capability, or performance-speed claim"
+  ]
+}

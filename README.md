@@ -1,5 +1,20 @@
 # Co-MoE-0
 
+## Co-MoE evidence freeze: v0.2.0
+
+The [technical report](output/pdf/co-moe-technical-report.pdf) and
+[editable manuscript](paper/manuscript.md) record execution feasibility and its
+limits. Prediction quality degrades under the tested 50/50 layer-7 substitution;
+matched deletion is less damaging than the foreign response in all three masks.
+No pretrained-transfer advantage is established.
+
+- [Fixed expert-0 prediction benchmark](SUBSTITUTION_BENCHMARK.md)
+- [Three 50/50 routed-contribution masks](HALF_SPLIT_BENCHMARK.md)
+- [Matched-zero diagnostic](HALF_SPLIT_ZERO.md)
+- [Paper build and artifact notes](paper/README.txt)
+
+The original v0.1.0 receipts remain unchanged. The repository remains private.
+
 One CPU inference path through OLMoE, augmented by one frozen, pretrained
 DeepSeek-V2-Lite expert. No donor backbone is instantiated or executed.
 

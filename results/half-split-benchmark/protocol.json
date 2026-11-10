@@ -1,0 +1,85 @@
+{
+  "experiment": "50/50 routed contribution substitution at OLMoE layer 7",
+  "fixed_before_scoring_utc": "2026-11-10T16:11:36.126984+00:00",
+  "primary": {
+    "model": "allenai/OLMoE-1B-7B-0924",
+    "revision": "6d84c48581ece794365f2b8e9cfb043c68ade9c5",
+    "layer": 7
+  },
+  "donor": {
+    "model": "ibm-granite/granite-3.1-1b-a400m-base",
+    "revision": "408b6e90baab8cf24f4aa9f8e19703ffa0a53b29",
+    "layer": 7,
+    "expert": 0
+  },
+  "data": {
+    "corpus": "Tiny Shakespeare",
+    "revision": "6f9487a6fe5b420b7ca9afb0d7c078e37c1d1b4e",
+    "url": "https://raw.githubusercontent.com/karpathy/char-rnn/6f9487a6fe5b420b7ca9afb0d7c078e37c1d1b4e/data/tinyshakespeare/input.txt",
+    "source_token_ids": "results/substitution-benchmark/input_ids.pt",
+    "token_range": [
+      16384,
+      20480
+    ],
+    "selection": "Reuse the preceding benchmark slice; no new text selection",
+    "context_tokens": 256,
+    "contexts": 16,
+    "input_tokens": 4096,
+    "scored_targets": 4080,
+    "scoring": "Teacher forcing: logits[j] score reference[j+1], j=0..254; reset each context"
+  },
+  "conditions": [
+    "native",
+    "split_seed_0",
+    "split_seed_1",
+    "split_seed_2"
+  ],
+  "mask": {
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "method": "First 4 positions of an independent randperm(8) per token",
+    "shape": [
+      16,
+      256,
+      8
+    ],
+    "selection_unit": "Native top-k position, independently per context/token",
+    "foreign_per_token": 4,
+    "native_per_token": 4,
+    "foreign_contributions_per_run": 16384,
+    "native_contributions_per_run": 16384,
+    "fixed_before_model_loading": true
+  },
+  "replacement": "Replace only masked raw expert outputs before original mixture weighting",
+  "projections": "Truncate input 2048 -> 1024; zero-pad output 1024 -> 2048",
+  "same_donor_for_all_selected_slots": true,
+  "donor_evaluation": "Once per token, reused at its four masked positions",
+  "extra_alpha": null,
+  "norm_matching": false,
+  "runtime": {
+    "python": "3.13.7",
+    "torch": "2.15.0+cu132",
+    "transformers": "5.22.2",
+    "device": "cpu",
+    "dtype": "float32",
+    "loss_accumulation": "float64 sum of float32 cross-entropy values",
+    "seed": 0,
+    "threads": 12,
+    "attention": "eager",
+    "experts": "eager",
+    "use_cache": false
+  },
+  "training": false,
+  "tuning": false,
+  "limitations": [
+    "50 percent of routed positions in one layer, not of the whole model",
+    "Equal counts do not imply equal routing weight, output norm, or computation cost",
+    "One pretrained donor expert reused, not four distinct donor experts per token",
+    "Three mask draws on the same literary slice are not independent datasets",
+    "No matched zero/random-weight controls at this replacement density",
+    "No general quality, pretraining-transfer, or speed claim"
+  ]
+}
