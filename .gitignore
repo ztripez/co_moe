@@ -2,3 +2,11 @@
 __pycache__/
 *.pyc
 .ruff_cache/
+
+# Local runs and working files; published evidence remains under results/.
+/runs/
+/tmp/
+/output/email/
+/paper/REVIEW_REQUEST.md
+.env
+.env.*

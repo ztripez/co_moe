@@ -297,7 +297,7 @@ For the tested OLMoE/Granite checkpoints, a foreign pretrained expert can enter 
 
 ## Appendix A. Artifact and reproduction details
 
-The original experiments in Sections 4-7 are grounded in Co-MoE artifact tag `v0.1.0`, commit `7bd6ab75c969b5233104cb542313e6b844a0a1ed`. Their source scripts, JSON receipts, captured tensors, recorded imitation pairs, and learned maps remain unchanged. This report and the subsequent Section 8 prediction benchmarks and matched-zero controls are frozen together in tag `v0.2.0`. The repository is [github.com/ztripez/co_moe](https://github.com/ztripez/co_moe) and remains private; public artifact access is not claimed. The renderer records completed experiments without performing inference or training.
+The original experiments in Sections 4-7 are grounded in Co-MoE artifact tag `v0.1.0`, commit `7bd6ab75c969b5233104cb542313e6b844a0a1ed`. Their source scripts, JSON receipts, captured tensors, recorded imitation pairs, and learned maps remain unchanged. The first report and the subsequent Section 8 prediction benchmarks and matched-zero controls are frozen together in tag `v0.2.0`. The code and recorded artifacts are publicly available at [github.com/ztripez/co_moe](https://github.com/ztripez/co_moe). This public edition updates the access statement without changing the experimental findings. The renderer records completed experiments without performing inference or training.
 
 **Model A:** `allenai/OLMoE-1B-7B-0924`. Layer 7, expert 0; native module `model.layers.7.mlp.experts`.
 

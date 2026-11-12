@@ -1,111 +1,121 @@
-# Co-MoE-0
+# Co-MoE
 
-## Co-MoE evidence freeze: v0.2.0
+Pretrained experts from different language models executing inside the same
+inference graph. Co-MoE tests whether a frozen expert from one independently
+trained mixture-of-experts (MoE) model can participate in another model's
+computation, using fixed dimensional maps and unchanged native routing.
 
-The [technical report](output/pdf/co-moe-technical-report.pdf) and
-[editable manuscript](paper/manuscript.md) record execution feasibility and its
-limits. Prediction quality degrades under the tested 50/50 layer-7 substitution;
-matched deletion is less damaging than the foreign response in all three masks.
-No pretrained-transfer advantage is established.
+The consistent demonstration pair is **OLMoE / IBM Granite**. The experiments
+establish execution and numerical causal influence under the tested conditions.
+They do not establish useful knowledge transfer or improved model capability.
 
-- [Fixed expert-0 prediction benchmark](SUBSTITUTION_BENCHMARK.md)
-- [Three 50/50 routed-contribution masks](HALF_SPLIT_BENCHMARK.md)
-- [Matched-zero diagnostic](HALF_SPLIT_ZERO.md)
-- [Paper build and artifact notes](paper/README.txt)
+**[Read the technical report](output/pdf/co-moe-technical-report.pdf)** ·
+[Manuscript](paper/manuscript.md) · [Research charter](CHARTER.md)
 
-The original v0.1.0 receipts remain unchanged. The repository remains private.
+## What was demonstrated
 
-One CPU inference path through OLMoE, augmented by one frozen, pretrained
-DeepSeek-V2-Lite expert. No donor backbone is instantiated or executed.
+- **Injection:** a standalone Granite expert processes an OLMoE activation and
+  contributes to OLMoE's residual stream.
+- **Routed substitution:** a Granite response replaces a selected native
+  expert's raw output while retaining OLMoE's routing indices, mixture weights,
+  and other expert contributions.
+- **Reciprocity:** two live model backbones exchange expert responses produced
+  from their own ongoing activations.
+- **Feedback:** one ordered A → B → A exchange lets a first-message intervention
+  change the returning response and the originating model's later computation.
+
+These feasibility runs complete generation with finite monitored tensors.
+Interventions change downstream computation; disabling the mechanisms restores
+the recorded native baselines exactly in the tested runtime.
+
+A denser test replaces four of eight routed contributions at one layer with
+weighted copies of **one** Granite expert response. It completes across three
+fixed masks, but prediction quality worsens on the evaluated text slice.
+Zeroing the identical contributions is less damaging. See the
+[50/50 results](HALF_SPLIT_BENCHMARK.md) and
+[matched-zero control](HALF_SPLIT_ZERO.md).
+
+Both expert implementations use SwiGLU. Different model families and hidden
+widths do not establish compatibility between arbitrary expert operators. One
+return path does not establish sustained feedback or stability.
+
+## Models
+
+| Role | Checkpoint | Pinned revision |
+| --- | --- | --- |
+| Primary | `allenai/OLMoE-1B-7B-0924` | `6d84c48581ece794365f2b8e9cfb043c68ade9c5` |
+| Donor / second live model | `ibm-granite/granite-3.1-1b-a400m-base` | `408b6e90baab8cf24f4aa9f8e19703ffa0a53b29` |
+
+The fixed bridge truncates OLMoE's 2048-dimensional input to 1024 and zero-pads
+Granite's output back to 2048. The selected donor is Granite layer 7, expert 0;
+the native substitution target is OLMoE layer 7, expert 0. Indices are zero-based.
+Injection uses a coefficient of 0.01; substitution keeps the slot's original
+mixture weight without an additional coefficient. No adapters are trained for
+the OLMoE/Granite feasibility experiments.
+
+## Run the consistent-pair experiment
+
+Use Python 3.12 or newer and `uv`. These scripts run on one machine in CPU
+float32. Allow roughly 30 GiB RAM for the OLMoE inference path; reciprocal and
+feedback runs also keep Granite's full backbone resident and were executed on a
+64 GiB machine. Checkpoint downloads require several GB of disk space and are
+cached by Hugging Face. Pretrained model weights are not included in this repo.
 
 ```sh
-uv run python co_moe0.py
+git clone https://github.com/ztripez/co_moe.git
+cd co_moe
+uv sync --frozen
+uv run python replicate_granite_pair.py --output runs/granite-replication
 ```
 
-The script runs baseline, coupled, coupled repeat, negated donor input, and
-restored baseline. Defaults: one five-token prompt, four greedy continuation
-tokens, alpha 0.01, seed 0, 12 CPU threads, float32. It downloads about 14 GB of
-primary weights into the Hugging Face cache and only about 17 MB of donor expert
-weights using HTTP byte ranges. Allow roughly 30 GiB RAM for float32 inference.
-It leaves existing model stores untouched. `--output` selects the receipt folder;
-`--alpha`, `--prompt`, `--tokens`, and `--threads` adjust this fixed experiment.
+This runs injection, donor-weight controls, and routed substitution with fixed
+settings. It writes `receipt.json` and `activations.pt` to the chosen directory.
+It references the included reciprocal and feedback receipts without rerunning
+them. Only the selected Granite expert is instantiated for this experiment,
+although its loader downloads the Granite checkpoint files.
 
-The exact checkpoint revisions are in the script and receipts. The donor loader
-executes only the publisher's standalone `DeepseekV2MLP` class extracted from its
-source, then loads the three pretrained expert matrices. It never constructs the
-donor attention, router, tokenizer, or model. All model parameters are frozen;
-there is no training or source-weight write.
+Run the paired experiments separately if needed:
 
-The primary layer 7 output hook adds `alpha * P_out(E(P_in(h)))` to its completed
-native residual update. Layer 8 continues normally. Both projections are fixed
-2048-dimensional permutations: cyclic shift +17 and its inverse. The donor input
-intervention negates the projected activation while keeping alpha and weights
-fixed. Causal comparisons use the same final prompt position, before generated
-token histories can differ. Disabling the bridge skips donor execution entirely.
+```sh
+uv run python reciprocal_inference.py --output runs/reciprocal
+uv run python feedback_inference.py --output runs/feedback
+```
 
-See [RESULT.md](RESULT.md), the JSON receipts, and saved activation tensors under
-`results/`. The program reports PASS only when the finite completed runs show a
-nonzero donor-dependent downstream change, an exact active repeat, and exact
-baseline restoration (including logits and generated tokens).
+Run commands from the repository root. Choose a fresh output directory for each
+run to preserve the recorded evidence under `results/`. The benchmark scripts
+require a new output directory; some earlier scripts can overwrite their output.
 
-The scope ends at computational coupling. Semantic usefulness, reciprocal
-cooperation, expert substitution, and adapter training have not been tested.
+## Experiment index
 
-## Donor weight controls
+| Experiment | Executable | Recorded method and results |
+| --- | --- | --- |
+| Granite injection, weight controls, substitution | `replicate_granite_pair.py` | [Replication](GRANITE_PAIR_REPLICATION.md) |
+| Reciprocal live inference | `reciprocal_inference.py` | [Reciprocity](RECIPROCAL_INFERENCE.md) |
+| One ordered return path | `feedback_inference.py` | [Feedback](FEEDBACK_INFERENCE.md) |
+| Fixed expert-0 prediction comparison | `benchmark_substitution.py` | [Prediction benchmark](SUBSTITUTION_BENCHMARK.md) |
+| Half of layer-7 routed contributions | `benchmark_half_split.py` | [Three fixed masks](HALF_SPLIT_BENCHMARK.md) |
+| Zero replacement at the same positions | `benchmark_half_zero.py` | [Matched-zero diagnostic](HALF_SPLIT_ZERO.md) |
+| Historical DeepSeek injection / controls | `co_moe0.py` | [Injection](RESULT.md), [weight controls](WEIGHT_CONTROLS.md) |
+| Historical DeepSeek expert imitation | `fit_native_expert.py` | [Bounded imitation](NATIVE_EXPERT_FIT.md) |
+| Historical DeepSeek routed substitution | `substitute_expert.py` | [Live substitution](LIVE_SUBSTITUTION.md) |
 
-`uv run python co_moe0.py --weight-controls` runs native, pretrained, random, and
-scrambled conditions with per-token contribution norm matching. Results go to
-`results/weight-controls/` by default. See [WEIGHT_CONTROLS.md](WEIGHT_CONTROLS.md)
-for the observed differences and their limits. No adapters are trained.
+The DeepSeek experiments are preserved as historical evidence. Their imitation
+study did not show a pretrained-donor advantage over the parameter-matched
+bypass. Its learned adapters are separate from the fixed-map Granite experiments.
 
-## Fit one native expert
+## Evidence and report
 
-`uv run python fit_native_expert.py` records inputs actually routed to OLMoE
-layer 7 expert 0, evaluates that expert's raw output, and fits input/output maps
-around the frozen DeepSeek expert. A parameter-matched bypass and frozen
-random/scrambled donor controls use the same data and training budget. Held-out
-pairs come from a separate corpus region; this is expert imitation, without
-additive residual injection or in-model expert replacement.
+`results/` contains the original numerical receipts, captured tensors, masks,
+token losses, and plots. Tag [`v0.1.0`](https://github.com/ztripez/co_moe/tree/v0.1.0)
+preserves the initial feasibility evidence;
+[`v0.2.0`](https://github.com/ztripez/co_moe/tree/v0.2.0) adds the prediction
+benchmarks, matched-zero controls, and first technical report. The historical
+receipts and tags remain unchanged.
 
-Each condition has 135,168 trainable parameters and runs 300 Adam updates.
-Both pretrained experts stay frozen. Native capture uses CPU; fitting uses CUDA
-when available. All losses and final metrics are saved under
-`results/native-expert-fit/`, alongside recorded pairs and adapter parameters.
-See [NATIVE_EXPERT_FIT.md](NATIVE_EXPERT_FIT.md) for results and limitations.
+The public edition updates repository documentation and the report's access
+statement without changing experimental results. See
+[paper build instructions](paper/README.md) to render the report from recorded
+evidence without running models.
 
-## Live native-expert substitution
-
-`uv run python substitute_expert.py` loads the saved foreign adapters and bypass
-without training. It selects a held-out context solely because the native router
-selects layer 7 expert 0, then runs native, foreign, bypass, zero, and restored
-conditions. Only that expert's raw output is replaced; native routing and its
-original mixture weights remain in use. The donor backbone never executes.
-
-See [LIVE_SUBSTITUTION.md](LIVE_SUBSTITUTION.md) for the execution receipt and
-[CHARTER.md](CHARTER.md) for the distinction between feasibility and optimization.
-
-## Reciprocal live inference
-
-`uv run python reciprocal_inference.py` runs full OLMoE and Granite MoE backbones
-with separate prompts, tokenizers, caches and generation histories. At one
-shared prefill pause point, each sends a live expert response into the other
-backbone. Two directional suppression interventions demonstrate reciprocal
-causal effects; disabling exchange checks native restoration. No training or
-learned adapters are used. This changes the second full model from DeepSeek to
-Granite to fit local memory. See [RECIPROCAL_INFERENCE.md](RECIPROCAL_INFERENCE.md).
-
-## One closed-loop exchange
-
-`uv run python feedback_inference.py` performs one ordered A→B→A round trip using
-the existing OLMoE/Granite pair and the same two auxiliary experts. It suppresses
-the first delivered message to trace its effect through Granite's later
-computation and back into OLMoE, then restores both native baselines. There is no
-training or quality optimization. See [FEEDBACK_INFERENCE.md](FEEDBACK_INFERENCE.md).
-
-## Consistent model-pair replication
-
-`uv run python replicate_granite_pair.py` repeats injection, norm-matched donor
-weight controls and native-routed substitution with the pinned OLMoE/Granite pair,
-fixed truncation/padding maps and no learned adapters. Historical DeepSeek
-receipts remain unchanged; successful reciprocal and feedback runs are referenced
-without rerunning. See [GRANITE_PAIR_REPLICATION.md](GRANITE_PAIR_REPLICATION.md).
+Author: **Ztripez von Matérn**. This is an independent research prototype and a
+first technical-report draft, with no assigned venue or claimed peer review.

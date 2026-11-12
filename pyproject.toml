@@ -1,7 +1,7 @@
 [project]
 name = "co-moe"
 version = "0.1.0"
-description = "One local heterogeneous MoE activation-coupling experiment"
+description = "Causal experiments with frozen experts from independently pretrained MoE models"
 requires-python = ">=3.12"
 dependencies = ["torch", "transformers", "safetensors", "huggingface-hub", "httpx", "pydantic"]
 
